@@ -12,7 +12,7 @@ def create_hybrid(chunks, query,k=3):
     vectorstore = Chroma.from_documents(chunks, embeddings)
     chroma_retriever = vectorstore.as_retriever(search_kwargs={"k" : k})
 
-    #create a hybrid via EnsembleRetriever
+    #create a hybrid via EnsembleRetriever (BM25 + chroma)
     ensemble = EnsembleRetriever(retrievers=[bm25_retriever, chroma_retriever], weights=[0.4,0.6])
     # BM25=40%,chroma=60%
     result = ensemble.invoke(query)
