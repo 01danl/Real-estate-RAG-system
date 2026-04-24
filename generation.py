@@ -14,6 +14,7 @@ Question:
 )
 
 def generate(results, query: str) -> str:
+    #divide context
     context = "\n\n".join(doc.page_content for doc in results)
 
     llm = ChatOpenAI(model="gpt-4o-mini")

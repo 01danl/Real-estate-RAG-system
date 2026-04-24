@@ -1,11 +1,19 @@
 from langchain_chroma import Chroma
+from langchain_vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
+from langchain_community.retrievers import BM25Retriever, EnsembleRetriever
 
-def create_db(chunks):
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-    db = Chroma.from_documents(chunks, embeddings)
-    return db
+def create_hybrid(chunks, query,k=3):
+    #Создаем BM25 для поиска
+    bm25_retriever = BM25Retriever.from_documents(chunks)
+    bm25_retriever.k=k
+    #Создаем chroma
+    embeddings = OpenAIEmbeddings(model='text-embedding-3-small')
+    vectorstore = Chroma.from_documents(chunks, embeddings)
+    chroma_retriever = vectorstore.as_retriever(search_kwargs={"k" : k})
 
-def retreive(db, query, k=3):
-    return db.similarity_search(query, k=k)
- 
+    #create a hybrid via EnsembleRetriever
+    ensemble = EnsembleRetriever(retrievers=[bm25_retriever, chroma_retriever], weights=[0.4,0.6])
+    # BM25=40%,chroma=60%
+    result = ensemble.invoke(query)
+    return result
